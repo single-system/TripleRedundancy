@@ -86,19 +86,33 @@ def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
 
 
 def run_tests():
-    # create 50 random messages
-    # and time them
-
-    #  for n in range(50):
-    msg = id_generator(3000)
+    msg = id_generator(30)
 
     rate = 10
 
-    print(msg)
-
     # finally save to file
 
+    msg = bytes(msg, "utf-8")
     return msg, rate
+
+
+def send_message(msg, rate, data):
+    for i in range(3):  # send msg 3 times
+        try:
+
+            # start timer
+            send(msg, rate)
+            # receive data from server (data, address)
+            data, address = clientSocket.recvfrom(2048)
+
+            # end timer
+
+            print('data', data)
+
+        except socket.error:
+            print("Error Code")
+            # sys.exit()
+        print(f" Server reply: {data}")
 
 
 def main():
@@ -109,7 +123,16 @@ def main():
     clientSocket.connect((host, port))
 
     if arguments and arguments[0] == 'run_tests':
-        msg, rate = run_tests()
+        # create 50 random messages and time them
+
+        for n in range(5):
+            start = time.time()
+            msg, rate = run_tests()
+            send_message(msg, rate, data)
+            end = time.time()
+
+            print('time elapsed:', end - start)
+
     else:
         while True:
 
@@ -118,35 +141,13 @@ def main():
             while not msg:
                 msg = input('Enter message to send : ')
 
-    msg = bytes(msg, "utf-8")
+            msg = bytes(msg, "utf-8")
+
+            send_message(msg, rate, data)
 
     # Set the whole string
     # Send Message
     # clientSocket.sendto(bytes(msg, "utf-8"), (host, port))
-    for i in range(3):  # send msg 3 times
-        # loop
-        try:
-            # try catch
-
-            start = time.time()
-
-            # start timer
-            send(msg, rate)
-            # receive data from server (data, address)
-            data, address = clientSocket.recvfrom(2048)
-
-            end = time.time()
-
-            print(end - start)
-
-            # end timer
-
-            print('data', data)
-
-        except socket.error:
-            print("Error Code")
-            # sys.exit()
-        print(f" Server reply: {data}")
 
 
 if __name__ == '__main__':

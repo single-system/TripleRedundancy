@@ -2,6 +2,7 @@
 
 import socket
 import sys
+import time
 
 # create a socket object, (SOCKET_FAMILY, SOCKET_TYPE)
 
@@ -38,11 +39,29 @@ def assemble_msg(msg_dic):
 
 
 def main():
+    measure_interarrival_time = False
+
+    arguments = sys.argv[1:]
+
+    if arguments and arguments[0] == 'interarrival_time':
+        measure_interarrival_time = True
+
+    previous_time = 0
+    this_time = 0
+
     while True:
         # Accept connections
         data, address = serverSocket.recvfrom(2048)
         # print(f"Data received:  {data}")
         # print(f' Message received from client: {assemble_msg(decode3ps(data))}\n')
+
+        if measure_interarrival_time:
+            previous_time = this_time
+            this_time = time.time()
+
+            if previous_time != 0:
+                interarrival = this_time - previous_time
+                print('interarrival rate:', round(interarrival, 9))
 
         reply = 'OK...' + str(data)
 

@@ -3,6 +3,11 @@
 import socket
 import random
 import math
+import sys
+import string
+
+import time
+
 
 # create a socket object
 
@@ -12,7 +17,7 @@ clientSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 hostname = socket.gethostname()  # get local machine name
 host = socket.gethostbyname(hostname)
 port = 8888
-packet_data_size = 10  # 10 used during testing for convenience.
+packet_data_size = 100  # 10 used during testing for convenience.
 
 
 def lostpackets(rate, total_number_of_packets):
@@ -68,6 +73,7 @@ def send(data, lost_rate):
                 counter_string = str(counter).rjust(3, '0')
                 msg = bytes(counter_string, "utf-8") + data[total_sent:]
                 sent = clientSocket.sendto(msg, (host, port)) - len(bytes(str(counter_string), "utf-8"))
+
                 print(f"{counter}.   {sent} bytes sent")
                 print(f"Message sent:   {msg}\n")
 
@@ -75,23 +81,34 @@ def send(data, lost_rate):
             print(f"Server not available. Error Code")
 
 
+def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
+
+
 def run_tests():
     # create 50 random messages
     # and time them
-    msg = 'asd'
+
+    #  for n in range(50):
+    msg = id_generator(3000)
+
     rate = 10
+
+    print(msg)
 
     # finally save to file
 
     return msg, rate
 
 
-def main(run_tests):
+def main():
+    arguments = sys.argv[1:]
+
     # connection to hostname on the port.
     data = b''
     clientSocket.connect((host, port))
 
-    if run_tests:
+    if arguments and arguments[0] == 'run_tests':
         msg, rate = run_tests()
     else:
         while True:
@@ -101,16 +118,30 @@ def main(run_tests):
             while not msg:
                 msg = input('Enter message to send : ')
 
-            msg = bytes(msg, "utf-8")
+    msg = bytes(msg, "utf-8")
 
     # Set the whole string
     # Send Message
     # clientSocket.sendto(bytes(msg, "utf-8"), (host, port))
     for i in range(3):  # send msg 3 times
+        # loop
         try:
+            # try catch
+
+            start = time.time()
+
+            # start timer
             send(msg, rate)
             # receive data from server (data, address)
             data, address = clientSocket.recvfrom(2048)
+
+            end = time.time()
+
+            print(end - start)
+
+            # end timer
+
+            print('data', data)
 
         except socket.error:
             print("Error Code")

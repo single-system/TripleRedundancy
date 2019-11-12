@@ -2,7 +2,6 @@
 
 import socket
 import sys
-import time
 
 # create a socket object, (SOCKET_FAMILY, SOCKET_TYPE)
 
@@ -43,11 +42,7 @@ def main():
         # Accept connections
         data, address = serverSocket.recvfrom(2048)
         # print(f"Data received:  {data}")
-        print('data received')
         # print(f' Message received from client: {assemble_msg(decode3ps(data))}\n')
-
-        # For the sake of testing
-        time.sleep(1)
 
         reply = 'OK...' + str(data)
 

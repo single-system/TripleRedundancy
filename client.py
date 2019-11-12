@@ -1,13 +1,11 @@
 #!/usr/bin/env python3           # This is client.py file
 
-import socket
-import random
 import math
-import sys
+import random
+import socket
 import string
-
+import sys
 import time
-
 
 # create a socket object
 
@@ -19,6 +17,10 @@ host = socket.gethostbyname(hostname)
 port = 8888
 packet_data_size = 100  # 10 used during testing for convenience.
 
+MIN_MESSAGE_LENGTH = 1
+AVERAGE_MESSAGE_LENGTH = 28     # Average tweet length
+MAX_MESSAGE_LENGTH = 1000000
+
 
 def lostpackets(rate, total_number_of_packets):
     """Take Packet loss rate in percentage and return a list of lost packets"""
@@ -28,7 +30,7 @@ def lostpackets(rate, total_number_of_packets):
     else:
         n_lost_packets = math.ceil(int(rate) * total_number_of_packets / 100)
 
-    print(f'number of loss packet {n_lost_packets}')
+    # print(f'number of loss packet {n_lost_packets}')
 
     try:
         list_of_lost_packets = random.sample(range(1, int(total_number_of_packets)), int(n_lost_packets))
@@ -38,14 +40,16 @@ def lostpackets(rate, total_number_of_packets):
     return list_of_lost_packets
 
 
-def send(data, lost_rate):
+def send(data, lost_rate, logging = False):
     """Sends packet"""
     total_sent = 0
     sent = 0
     counter = 0
     total_number_of_p = int(len(data) / packet_data_size)
     list_of_lost_packets = lostpackets(lost_rate, total_number_of_p)
-    print(f'list of lost packets {list_of_lost_packets}, Total number of packets {total_number_of_p}')
+
+    if logging:
+        print(f'list of lost packets {list_of_lost_packets}, Total number of packets {total_number_of_p}')
 
     while total_sent < len(data) and len(data) > packet_data_size:
 
@@ -60,8 +64,10 @@ def send(data, lost_rate):
                 counter_string = str(counter).rjust(3, '0')
                 msg = bytes(counter_string, "utf-8") + data[total_sent: chunk]
                 sent = clientSocket.sendto(msg, (host, port)) - len(bytes(str(counter_string), "utf-8"))
-                print(f"{counter}.   {sent} bytes sent")
-                print(f"Message sent:   {msg}\n")
+
+                if logging:
+                    print(f"{counter}.   {sent} bytes sent")
+                    print(f"Message sent:   {msg}\n")
             except socket.error:
                 print(f"Server not available. Error Code")
 
@@ -74,8 +80,9 @@ def send(data, lost_rate):
                 msg = bytes(counter_string, "utf-8") + data[total_sent:]
                 sent = clientSocket.sendto(msg, (host, port)) - len(bytes(str(counter_string), "utf-8"))
 
-                print(f"{counter}.   {sent} bytes sent")
-                print(f"Message sent:   {msg}\n")
+                if logging:
+                    print(f"{counter}.   {sent} bytes sent")
+                    print(f"Message sent:   {msg}\n")
 
         except socket.error:
             print(f"Server not available. Error Code")
@@ -85,34 +92,56 @@ def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
 
-def run_tests():
-    msg = id_generator(30)
+def run_test(total_messages, data, id_length=-1):
 
-    rate = 10
+    # start timer
+    start = time.time()
+    for n in range(total_messages):
+        if id_length == -1:
+            id_length = random.randint(MIN_MESSAGE_LENGTH, MAX_MESSAGE_LENGTH)
+        msg = id_generator(id_length)
+        rate = 10
+        msg = bytes(msg, "utf-8")
+        send_message(msg, rate, data)
 
-    # finally save to file
+    # end timer
+    end = time.time()
 
-    msg = bytes(msg, "utf-8")
-    return msg, rate
+    return round((end - start) / total_messages, 9)
 
 
-def send_message(msg, rate, data):
+def messages_tests(data):
+    total_messages = 50
+
+    elapsed_time = run_test(total_messages, data)
+    print('Average time elapsed for 50 random messages: {0} seconds'.format(elapsed_time))
+
+    total_messages = 25
+
+    elapsed_time = run_test(total_messages, data, MIN_MESSAGE_LENGTH)
+    print('Average time elapsed for 25 min size messages: {0} seconds'.format(elapsed_time))
+
+    elapsed_time = run_test(total_messages, data, AVERAGE_MESSAGE_LENGTH)
+    print('Average time elapsed for 25 average size messages: {0} seconds'.format(elapsed_time))
+
+    elapsed_time = run_test(total_messages, data, MAX_MESSAGE_LENGTH)
+    print('Average time elapsed for 25 max size messages: {0} seconds'.format(elapsed_time))
+
+
+def send_message(msg, rate, data, logging=False):
     for i in range(3):  # send msg 3 times
         try:
 
-            # start timer
-            send(msg, rate)
+            send(msg, rate, logging)
             # receive data from server (data, address)
             data, address = clientSocket.recvfrom(2048)
-
-            # end timer
-
-            print('data', data)
 
         except socket.error:
             print("Error Code")
             # sys.exit()
-        print(f" Server reply: {data}")
+
+        if logging:
+            print(f" Server reply: {data}")
 
 
 def main():
@@ -123,16 +152,7 @@ def main():
     clientSocket.connect((host, port))
 
     if arguments and arguments[0] == 'run_tests':
-        # create 50 random messages and time them
-
-        for n in range(5):
-            start = time.time()
-            msg, rate = run_tests()
-            send_message(msg, rate, data)
-            end = time.time()
-
-            print('time elapsed:', end - start)
-
+        messages_tests(data)
     else:
         while True:
 

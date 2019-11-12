@@ -75,33 +75,47 @@ def send(data, lost_rate):
             print(f"Server not available. Error Code")
 
 
-def main():
+def run_tests():
+    # create 50 random messages
+    # and time them
+    msg = 'asd'
+    rate = 10
+
+    # finally save to file
+
+    return msg, rate
+
+
+def main(run_tests):
     # connection to hostname on the port.
     data = b''
     clientSocket.connect((host, port))
 
-    while True:
+    if run_tests:
+        msg, rate = run_tests()
+    else:
+        while True:
 
-        msg = input('Enter message to send : ')
-        rate = input('Enter loss rate : ')  # packet loss rate
-        while not msg:
             msg = input('Enter message to send : ')
+            rate = input('Enter loss rate : ')  # packet loss rate
+            while not msg:
+                msg = input('Enter message to send : ')
 
-        msg = bytes(msg, "utf-8")
+            msg = bytes(msg, "utf-8")
 
-        # Set the whole string
-        # Send Message
-        # clientSocket.sendto(bytes(msg, "utf-8"), (host, port))
-        for i in range(3):  # send msg 3 times
-            try:
-                send(msg, rate)
-                # receive data from server (data, address)
-                data, address = clientSocket.recvfrom(2048)
+    # Set the whole string
+    # Send Message
+    # clientSocket.sendto(bytes(msg, "utf-8"), (host, port))
+    for i in range(3):  # send msg 3 times
+        try:
+            send(msg, rate)
+            # receive data from server (data, address)
+            data, address = clientSocket.recvfrom(2048)
 
-            except socket.error:
-                print("Error Code")
-                # sys.exit()
-            print(f" Server reply: {data}")
+        except socket.error:
+            print("Error Code")
+            # sys.exit()
+        print(f" Server reply: {data}")
 
 
 if __name__ == '__main__':

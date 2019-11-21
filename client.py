@@ -40,7 +40,7 @@ def lostpackets(rate, total_number_of_packets):
     return list_of_lost_packets
 
 
-def send(data, lost_rate, logging = False):
+def send(data, lost_rate, logging=False):
     """Sends packet"""
     total_sent = 0
     sent = 0

@@ -40,11 +40,15 @@ def assemble_msg(msg_dic):
 
 def main():
     measure_interarrival_time = False
+    logging = False
 
     arguments = sys.argv[1:]
 
-    if arguments and arguments[0] == 'interarrival_time':
-        measure_interarrival_time = True
+    if arguments:
+        if arguments[0] == 'interarrival_time':
+            measure_interarrival_time = True
+        if arguments[0] == 'logging':
+            logging = True
 
     previous_time = 0
     this_time = 0
@@ -52,8 +56,10 @@ def main():
     while True:
         # Accept connections
         data, address = serverSocket.recvfrom(2048)
-        # print(f"Data received:  {data}")
-        # print(f' Message received from client: {assemble_msg(decode3ps(data))}\n')
+
+        if logging:
+            print(f"Data received:  {data}")
+            print(f' Message received from client: {assemble_msg(decode3ps(data))}\n')
 
         if measure_interarrival_time:
             previous_time = this_time

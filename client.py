@@ -163,7 +163,7 @@ def main():
 
             msg = bytes(msg, "utf-8")
 
-            send_message(msg, rate, data)
+            send_message(msg, rate, data, logging=True)
 
     # Set the whole string
     # Send Message
